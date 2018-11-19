@@ -62,8 +62,8 @@ def change_xml_annotation(root, image_id, new_target):
 
 
 if __name__ == "__main__":
-    # cmd = os.getcwd()
-    cmd = "C:\\Users\\64140\Desktop\\500\Example"
+    cmd = os.getcwd()
+    # cmd = "C:\\Users\\64140\Desktop\\500\Example"
     # cmd = "/Users/wangbenkang/Desktop/500/Example"
     image_id = "000010"
     img = Image.open(os.path.join(cmd, str(image_id) + '.jpg'))
@@ -72,6 +72,28 @@ if __name__ == "__main__":
     bndbox = read_xml_annotation(cmd, str(image_id) + '.xml')
 
     boxes_img_aug = []
+
+# 循环
+    for i in range(len(bndbox)):
+        bbs = ia.BoundingBoxesOnImage([
+            # ia.BoundingBox(x1=bndbox[0], y1=bndbox[1], x2=bndbox[2], y2=bndbox[3]) #改这里！
+            ia.BoundingBox(x1=bndbox[i][0], y1=bndbox[i][1], x2=bndbox[i][2], y2=bndbox[i][3]),  # for i in len(bndbox)
+            # ia.BoundingBox(x1=bndbox[1][0], y1=bndbox[1][1], x2=bndbox[1][2], y2=bndbox[1][3])
+        ], shape=img.shape)
+        seq = iaa.Sequential([
+            iaa.Flipud(0.5),  # vertically flip 20% of all images
+            iaa.Multiply((1.2, 1.5)),  # change brightness, doesn't affect BBs
+            iaa.Affine(
+                translate_px={"x": 10, "y": 10},
+                scale=(0.8, 0.95),
+                rotate=(-10, 10)
+            )  # translate by 40/60px on x/y axis, and scale to 50-70%, affects BBs
+        ])
+        seq_det = seq.to_deterministic()  # 保持坐标和图像同步改变，而不是随机
+        image_aug = seq_det.augment_images([img])[0]
+        bbs_aug = seq_det.augment_bounding_boxes([bbs])[0]
+        boxes_img_aug.append(bbs_aug)
+
 
     bbs = ia.BoundingBoxesOnImage([
         # ia.BoundingBox(x1=bndbox[0], y1=bndbox[1], x2=bndbox[2], y2=bndbox[3]) #改这里！
@@ -82,7 +104,6 @@ if __name__ == "__main__":
 
     bbs1 = ia.BoundingBoxesOnImage([
         # ia.BoundingBox(x1=bndbox[0], y1=bndbox[1], x2=bndbox[2], y2=bndbox[3]) #改这里！
-        # ia.BoundingBox(x1=bndbox[0][0], y1=bndbox[0][1], x2=bndbox[0][2], y2=bndbox[0][3]),  # for i in len(bndbox)
         ia.BoundingBox(x1=bndbox[1][0], y1=bndbox[1][1], x2=bndbox[1][2], y2=bndbox[1][3])
     ], shape=img.shape)
     boxes_img_aug.append(bbs1)
