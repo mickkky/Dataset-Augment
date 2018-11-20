@@ -131,6 +131,7 @@ if __name__ == "__main__":
     AUG_IMG_DIR = "C:\\Users\\64140\\Desktop\\500\\AUG_IMG"
     mkdir(AUG_XML_DIR)
 
+    AUGLOOP = 10
     boxes_img_aug_list = []
     new_bndbox = []
     new_bndbox_list = []
@@ -155,7 +156,7 @@ if __name__ == "__main__":
 
             bndbox = read_xml_annotation(XML_DIR, name)
 
-            for epoch in range(10):
+            for epoch in range(AUGLOOP):
                 seq_det = seq.to_deterministic()  # 保持坐标和图像同步改变，而不是随机
                 # image_aug = seq_det.augment_images([img])[0]
                 # 读取图片
