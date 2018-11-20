@@ -4,7 +4,7 @@ import os
 from os import getcwd
 import numpy as np
 from PIL import Image
-import cv2
+# import cv2
 
 import imgaug as ia
 from imgaug import augmenters as iaa
