@@ -118,10 +118,6 @@ def mkdir(path):
 if __name__ == "__main__":
     # cmd = os.getcwd()
     cmd = "C:\\Users\\64140\Desktop\\500\Example"
-    # cmd = "/Users/wangbenkang/Desktop/500/Example"
-    # image_id = "000010"
-    # img = Image.open(os.path.join(cmd, str(image_id) + '.jpg'))
-    # img = np.array(img)
     IMG_DIR = "C:\\Users\\64140\\Desktop\\500\\Example"
     XML_DIR = "C:\\Users\\64140\\Desktop\\500\\XML"
 
