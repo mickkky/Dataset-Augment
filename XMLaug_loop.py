@@ -141,9 +141,10 @@ if __name__ == "__main__":
         iaa.Flipud(0.5),  # vertically flip 20% of all images
         iaa.Fliplr(0.5),  # 镜像
         iaa.Multiply((1.2, 1.5)),  # change brightness, doesn't affect BBs
+        iaa.GaussianBlur(sigma=(0, 3.0)),
         # iaa.GaussianBlur(0.5),
         iaa.Affine(
-            translate_px={"x": 10, "y": 10},
+            translate_px={"x": 15, "y": 15},
             scale=(0.8, 0.95),
             rotate=(-30, 30)
         )  # translate by 40/60px on x/y axis, and scale to 50-70%, affects BBs
@@ -178,8 +179,9 @@ if __name__ == "__main__":
                 # 存储变化后的图片
                 image_aug = seq_det.augment_images([img])[0]
                 path = os.path.join(AUG_IMG_DIR, str(name[:-4]) + "_aug_" + str(epoch) + '.jpg')
-                image_before = bbs.draw_on_image(image_aug, thickness=0)
-                Image.fromarray(image_before).save(path)
+                image_auged = bbs.draw_on_image(image_aug, thickness=0)
+                Image.fromarray(image_auged).save(path)
                 change_xml_list_annotation(XML_DIR, name[:-4], new_bndbox_list,AUG_XML_DIR,epoch)
                 print(str(name[:-4]) + "_aug_" + str(epoch) + '.jpg')
                 new_bndbox_list = []
+
