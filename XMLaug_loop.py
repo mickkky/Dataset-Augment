@@ -59,7 +59,7 @@ def change_xml_annotation(root, image_id, new_target):
     ymax.text = str(new_ymax)
     tree.write(os.path.join(root, str(image_id) + "_aug" + '.xml'))
 
-def change_xml_list_annotation(root, image_id, new_target):
+def change_xml_list_annotation(root, image_id, new_target,saveroot,id):
 
     in_file = open(os.path.join(root, str(image_id) + '.xml'))  # 这里root分别由两个意思
     tree = ET.parse(in_file)
@@ -90,54 +90,96 @@ def change_xml_list_annotation(root, image_id, new_target):
 
         index = index + 1
 
-    tree.write(os.path.join(root, str(image_id) + "_aug" + '.xml'))
+    tree.write(os.path.join(saveroot, str(image_id) + "_aug_" + str(id) + '.xml'))
 
+
+def mkdir(path):
+
+    # 去除首位空格
+    path = path.strip()
+    # 去除尾部 \ 符号
+    path = path.rstrip("\\")
+    # 判断路径是否存在
+    # 存在     True
+    # 不存在   False
+    isExists = os.path.exists(path)
+    # 判断结果
+    if not isExists:
+        # 如果不存在则创建目录
+         # 创建目录操作函数
+        os.makedirs(path)
+        print(path + ' 创建成功')
+        return True
+    else:
+        # 如果目录存在则不创建，并提示目录已存在
+        print(path + ' 目录已存在')
+        return False
 
 if __name__ == "__main__":
     # cmd = os.getcwd()
     cmd = "C:\\Users\\64140\Desktop\\500\Example"
     # cmd = "/Users/wangbenkang/Desktop/500/Example"
-    image_id = "000010"
-    img = Image.open(os.path.join(cmd, str(image_id) + '.jpg'))
-    img = np.array(img)
-    IMG_DIR = "C:\\Users\\64140\Desktop\\500\Example"
-    XML_DIR = "C:\\Users\\64140\Desktop\\500\XML"
+    # image_id = "000010"
+    # img = Image.open(os.path.join(cmd, str(image_id) + '.jpg'))
+    # img = np.array(img)
+    IMG_DIR = "C:\\Users\\64140\\Desktop\\500\\Example"
+    XML_DIR = "C:\\Users\\64140\\Desktop\\500\\XML"
 
-    bndbox = read_xml_annotation(cmd, str(image_id) + '.xml')
+
+    AUG_XML_DIR = "C:\\Users\\64140\\Desktop\\500\\AUG_XML"
+    mkdir(AUG_XML_DIR)
+    AUG_IMG_DIR = "C:\\Users\\64140\\Desktop\\500\\AUG_IMG"
+    mkdir(AUG_XML_DIR)
 
     boxes_img_aug_list = []
     new_bndbox = []
     new_bndbox_list = []
+
 
     # 影像增强
     seq = iaa.Sequential([
         iaa.Flipud(0.5),  # vertically flip 20% of all images
         iaa.Fliplr(0.5),  # 镜像
         iaa.Multiply((1.2, 1.5)),  # change brightness, doesn't affect BBs
-        iaa.GaussianBlur(0.5),
+        # iaa.GaussianBlur(0.5),
         iaa.Affine(
             translate_px={"x": 10, "y": 10},
             scale=(0.8, 0.95),
-            rotate=(-10, 10)
+            rotate=(-30, 30)
         )  # translate by 40/60px on x/y axis, and scale to 50-70%, affects BBs
     ])
 
-    seq_det = seq.to_deterministic()  # 保持坐标和图像同步改变，而不是随机
-    image_aug = seq_det.augment_images([img])
+    for root, sub_folders, files in os.walk(XML_DIR):
+        for name in files:
 
-    # bndbox 坐标增强
-    for i in range(len(bndbox)):
-        bbs = ia.BoundingBoxesOnImage([
-            ia.BoundingBox(x1=bndbox[i][0], y1=bndbox[i][1], x2=bndbox[i][2], y2=bndbox[i][3]),
-        ], shape=img.shape)
+            bndbox = read_xml_annotation(XML_DIR, name)
 
-        bbs_aug = seq_det.augment_bounding_boxes([bbs])[0]
-        boxes_img_aug_list.append(bbs_aug)
+            for epoch in range(10):
+                seq_det = seq.to_deterministic()  # 保持坐标和图像同步改变，而不是随机
+                # image_aug = seq_det.augment_images([img])[0]
+                # 读取图片
+                img = Image.open(os.path.join(IMG_DIR, name[:-4] + '.jpg'))
+                img = np.array(img)
 
-        # new_bndbox_list:[[x1,y1,x2,y2],...[],[]]
-        new_bndbox_list.append([int(bbs_aug.bounding_boxes[0].x1),
-                                int(bbs_aug.bounding_boxes[0].y1),
-                                int(bbs_aug.bounding_boxes[0].x2),
-                                int(bbs_aug.bounding_boxes[0].y2)])
+                # bndbox 坐标增强
+                for i in range(len(bndbox)):
+                    bbs = ia.BoundingBoxesOnImage([
+                        ia.BoundingBox(x1=bndbox[i][0], y1=bndbox[i][1], x2=bndbox[i][2], y2=bndbox[i][3]),
+                    ], shape=img.shape)
 
-    change_xml_list_annotation(cmd, image_id, new_bndbox_list)
+                    bbs_aug = seq_det.augment_bounding_boxes([bbs])[0]
+                    boxes_img_aug_list.append(bbs_aug)
+
+                    # new_bndbox_list:[[x1,y1,x2,y2],...[],[]]
+                    new_bndbox_list.append([int(bbs_aug.bounding_boxes[0].x1),
+                                            int(bbs_aug.bounding_boxes[0].y1),
+                                            int(bbs_aug.bounding_boxes[0].x2),
+                                            int(bbs_aug.bounding_boxes[0].y2)])
+                # 存储变化后的图片
+                image_aug = seq_det.augment_images([img])[0]
+                path = os.path.join(AUG_IMG_DIR, str(name[:-4]) + "_aug_" + str(epoch) + '.jpg')
+                image_before = bbs.draw_on_image(image_aug, thickness=0)
+                Image.fromarray(image_before).save(path)
+                change_xml_list_annotation(XML_DIR, name[:-4], new_bndbox_list,AUG_XML_DIR,epoch)
+                print(str(name[:-4]) + "_aug_" + str(epoch) + '.jpg')
+                new_bndbox_list = []
