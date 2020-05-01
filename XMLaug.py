@@ -112,10 +112,10 @@ if __name__ == "__main__":
     IMG_DIR = "path/to/your/IMG"
     XML_DIR = "path/to/your/XML"
 
-    AUG_XML_DIR = "path/to/your/AUG_XML" # 存储增强后的XML文件夹路径
+    AUG_XML_DIR = "path/to/your/AUG_XML"  # 存储增强后的XML文件夹路径
     mkdir(AUG_XML_DIR)
 
-    AUG_IMG_DIR = "path/to/your/AUG_IMG" # 存储增强后的影像文件夹路径
+    AUG_IMG_DIR = "path/to/your/AUG_IMG"  # 存储增强后的影像文件夹路径
     mkdir(AUG_IMG_DIR)
 
     AUGLOOP = 10 # 每张影像增强的数量
@@ -168,8 +168,8 @@ if __name__ == "__main__":
                 # 存储变化后的图片
                 image_aug = seq_det.augment_images([img])[0]
                 path = os.path.join(AUG_IMG_DIR, str(name[:-4]) + "_aug_" + str(epoch) + '.jpg')
-                image_auged = bbs.draw_on_image(image_aug, thickness=0)
-                Image.fromarray(image_auged).save(path)
+                # image_auged = bbs.draw_on_image(image_aug, thickness=0)
+                Image.fromarray(image_aug).save(path)
 
                 # 存储变化后的XML
                 change_xml_list_annotation(XML_DIR, name[:-4], new_bndbox_list,AUG_XML_DIR,epoch)
